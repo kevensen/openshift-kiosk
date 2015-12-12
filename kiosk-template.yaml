@@ -60,9 +60,10 @@ objects:
       dockerStrategy:
       type: Docker
     triggers:
-    - generic:
+    - GitHub:
         secret: ${KIOSK_GITHUB_WEBHOOK_SECRET}
       type: GitHub
+    - type: ConfigChange
 - apiVersion: v1
   kind: BuildConfig
   metadata:
@@ -84,9 +85,10 @@ objects:
       dockerStrategy:
       type: Docker
     triggers:
-    - generic:
+    - GitHub:
         secret: ${KIOSK_GITHUB_WEBHOOK_SECRET}
       type: GitHub
+    - type: ConfigChange
 - apiVersion: v1
   kind: BuildConfig
   metadata:
@@ -108,10 +110,10 @@ objects:
       dockerStrategy:
       type: Docker
     triggers:
-    - type: ImageChange
+    - type: imagechange
       ImageChange:
         from: rhel-vnc:latest
-        kind: ImageChangeTag 
+        kind: ImageStreamTag 
 parameters:
 - description: The URL of the repository with your XRDP Dockerfile
   name: KIOSK_REPOSITORY_URL
