@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if env | grep ^VNC_PORT_5901_TCP_ADDR=
+then
+	sed -i "s/ip=127\.0\.0\.1/ip=$VNC_PORT_5901_TCP_ADDR/g" /etc/xrdp/xrdp.ini
+fi
+sed -i "s/port=-1/port=5901/g" /etc/xrdp/xrdp.ini
+
+exit
