@@ -8,7 +8,9 @@ MAINTAINER Ken Evensen
 USER root
 RUN yum install yum install -y tigervnc-server; yum clean all; rm -rf /var/cache/yum
 RUN yum install -y xorg-x11-server-utils xterm gnome-session; yum clean all; rm -rf /var/cache/yum
-RUN /bin/dbus-uuidgen > /var/lib/dbus/machine-id
+#RUN /bin/dbus-uuidgen > /var/lib/dbus/machine-id
+RUN /bin/dbus-uuidgen --ensure
+
 RUN useradd basicuser; mkdir -p /home/basicuser/.vnc
 ADD xstartup /home/basicuser/.vnc/
 ADD passwd /home/basicuser/.vnc/

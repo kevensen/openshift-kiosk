@@ -110,7 +110,7 @@ objects:
       dockerStrategy:
       type: Docker
     triggers:
-    - type: imagechange
+    - type: ImageChange
       ImageChange:
         from: rhel-vnc:latest
         kind: ImageStreamTag 
