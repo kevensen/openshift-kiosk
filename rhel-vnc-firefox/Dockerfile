@@ -1,7 +1,7 @@
 # Using the VNC image to run Firefox
 # Version 1
 
-FROM registry.apps.ose3ha.rhtps.io/kiosk/rhel-vnc:latest
+FROM 172.30.184.188:5000/kiosk/rhel-vnc:latest
 MAINTAINER Ken Evensen
 
 USER root
