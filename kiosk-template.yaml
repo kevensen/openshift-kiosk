@@ -112,8 +112,9 @@ objects:
     triggers:
     - type: ImageChange
       ImageChange:
-        from: rhel-vnc:latest
-        kind: ImageStreamTag 
+        from: 
+          name: rhel-vnc:latest
+          kind: ImageStreamTag 
 parameters:
 - description: The URL of the repository with your XRDP Dockerfile
   name: KIOSK_REPOSITORY_URL
