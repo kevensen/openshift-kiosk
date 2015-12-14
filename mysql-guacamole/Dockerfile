@@ -1,4 +1,4 @@
-FROM openshift/mysql:latest
+FROM registry.access.redhat.com/openshift3/mysql-55-rhel7
 MAINTAINER Kenneth D. Evensen <kevensen@redhat.com>
 
 USER root
