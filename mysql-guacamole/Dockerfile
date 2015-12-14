@@ -1,4 +1,4 @@
-FROM openshift/mysql
+FROM openshift/mysql:latest
 MAINTAINER Kenneth D. Evensen <kevensen@redhat.com>
 
 USER root
