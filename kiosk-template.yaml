@@ -20,7 +20,15 @@ objects:
       protocol: TCP
       name: rhel-xrdp
     selector:
-      app: xrdp
+      name: kiosk
+- apiVersion: v1
+  kind: Route
+  metadata:
+    name: xrdp
+  spec:
+    to:
+      kind: Service
+      name: xrdp-service
 - apiVersion: v1
   kind: ImageStream
   metadata:
@@ -58,6 +66,7 @@ objects:
       type: Git
     strategy:
       dockerStrategy:
+      #  nocache: true
       type: Docker
     triggers:
     - GitHub:
@@ -83,6 +92,7 @@ objects:
       type: Git
     strategy:
       dockerStrategy:
+     #   nocache: true
       type: Docker
     triggers:
     - GitHub:
@@ -108,6 +118,7 @@ objects:
       type: Git
     strategy:
       dockerStrategy:
+    #    nocache: true
       type: Docker
     triggers:
     - type: ImageChange
@@ -115,6 +126,54 @@ objects:
         from: 
           name: rhel-vnc:latest
           kind: ImageStreamTag 
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    annotations:
+      description: Defines how to deploy the application server
+    name: kiosk
+  spec:
+    replicas: 1
+    selector:
+      name: kiosk
+    strategy:
+      type: Rolling
+    template:
+      metadata:
+        labels:
+          name: kiosk
+        name: kiosk
+      spec:
+        containers:
+        - name: rhel-vnc-firefox
+          image: rhel-vnc-firefox
+          ports:
+          - containerPort: 5901
+        - name: rhel-xrdp
+          image: rhel-xrdp
+          ports:
+          - containerPort: 3389
+        nodeSelector:
+          role: backend
+    triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - rhel-xrdp
+        from:
+          kind: ImageStreamTag
+          name: rhel-xrdp:latest
+      type: ImageChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - rhel-vnc-firefox
+        from:
+          kind: ImageStreamTag
+          name: rhel-vnc-firefox:latest
+      type: ImageChange
+    - type: ConfigChange
+
 parameters:
 - description: The URL of the repository with your XRDP Dockerfile
   name: KIOSK_REPOSITORY_URL
@@ -122,6 +181,7 @@ parameters:
 - description: Set this to a branch name, tag or other ref of your repository if you
     are not using the default branch
   name: KIOSK_REPOSITORY_REF
+  value: master
 - description: Set this to the subdirectory containing the Dockerfile if it is not in the main directory
   name: XRDP_CONTEXT_DIR
   value: rhel-xrdp
