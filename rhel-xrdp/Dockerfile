@@ -5,6 +5,8 @@
 FROM rhel6.7
 MAINTAINER Ken Evensen <kevensen@redhat.com>
 
+LABEL io.openshift.expose-services="3389:tcp"
+
 USER root
 RUN yum install -y tigervnc-server; yum clean all; rm -rf /var/cache/yum
 RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm; yum install -y xrdp supervisor; yum clean all; rm -rf /var/cache/yum
