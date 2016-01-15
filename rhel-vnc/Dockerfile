@@ -5,6 +5,8 @@
 FROM rhel6.7
 MAINTAINER Ken Evensen
 
+LABEL io.openshift.expose-services="5901:tcp"
+
 USER root
 RUN yum install yum install -y tigervnc-server; yum clean all; rm -rf /var/cache/yum
 RUN yum install -y xorg-x11-server-utils xterm gnome-session dbus; yum clean all; rm -rf /var/cache/yum
