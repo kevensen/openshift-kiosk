@@ -1,7 +1,7 @@
 # Using the VNC image to run Eclipse
 # Version 1
 
-FROM rhel-vnc:latest
+FROM $OPENSHIFT_BUILD_NAMESPACE/rhel-vnc:latest
 
 MAINTAINER Ken Evensen
 
