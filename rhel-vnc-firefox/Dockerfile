@@ -1,7 +1,7 @@
 # Using the VNC image to run Firefox
 # Version 1
 
-FROM kiosk/rhel-vnc:latest
+FROM kiosk/rhel-vnc
 MAINTAINER Ken Evensen
 
 USER root
