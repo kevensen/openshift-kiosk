@@ -1,7 +1,8 @@
 # Using the VNC image to run Eclipse
 # Version 1
 
-FROM kiosk/rhel-vnc
+FROM eclipsekiosk/rhel-vnc
+
 MAINTAINER Ken Evensen
 
 USER root
