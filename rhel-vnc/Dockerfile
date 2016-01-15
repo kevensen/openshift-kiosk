@@ -9,7 +9,7 @@ LABEL io.openshift.expose-services="5901:tcp"
 
 USER root
 RUN yum install -y tigervnc-server \
-                   xorg-x11-server-utils 
+                   xorg-x11-server-utils \
                    xterm \
                    gnome-session dbus; yum clean all; rm -rf /var/cache/yum
 RUN /bin/dbus-uuidgen --ensure
