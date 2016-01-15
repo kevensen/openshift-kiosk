@@ -32,6 +32,12 @@ objects:
   metadata:
     annotations:
       description: Keeps track of changes in the application image
+    name: centos-vnc-eclipse
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    annotations:
+      description: Keeps track of changes in the application image
     name: centos-vnc
 - apiVersion: v1
   kind: BuildConfig
@@ -83,6 +89,80 @@ objects:
         secret: ${KIOSK_GITHUB_WEBHOOK_SECRET}
       type: GitHub
     - type: ConfigChange
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    annotations:
+      description: Defines how to build the application
+    name: centos-vnc-eclipse
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: centos-vnc-eclipse:latest
+    source:
+      contextDir: ${VNC_ECLIPSE_CONTEXT_DIR}
+      git:
+        ref: ${KIOSK_REPOSITORY_REF}
+        uri: ${KIOSK_REPOSITORY_URL}
+      type: Git
+    strategy:
+      dockerStrategy:
+      type: Docker
+    triggers:
+    - type: ImageChange
+      ImageChange:
+        from: 
+          name: centos-vnc:latest
+          kind: ImageStreamTag 
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    annotations:
+      description: Defines how to deploy the application server
+    name: kiosk
+  spec:
+    replicas: 1
+    selector:
+      name: kiosk
+    strategy:
+      type: Rolling
+    template:
+      metadata:
+        labels:
+          name: kiosk
+        name: kiosk
+      spec:
+        containers:
+        - name: centos-vnc-eclipse
+          image: centos-vnc-eclipse
+          ports:
+          - containerPort: 5901
+        - name: centos-xrdp
+          image: centos-xrdp
+          ports:
+          - containerPort: 3389
+        nodeSelector:
+          role: backend
+    triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - centos-xrdp
+        from:
+          kind: ImageStreamTag
+          name: centos-xrdp:latest
+      type: ImageChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - centos-vnc-eclipse
+        from:
+          kind: ImageStreamTag
+          name: centos-vnc-eclipse:latest
+      type: ImageChange
+    - type: ConfigChange
+
 parameters:
 - description: The URL of the repository with your XRDP Dockerfile
   name: KIOSK_REPOSITORY_URL
@@ -97,6 +177,9 @@ parameters:
 - description: Set this to the subdirectory containing the Dockerfile if it is not in the main directory
   name: VNC_CONTEXT_DIR
   value: centos-vnc
+- description: Set this to the subdirectory containing the Dockerfile if it is not in the main directory
+  name: VNC_ECLIPSE_CONTEXT_DIR
+  value: centos-vnc-eclipse
 - description: A secret string used to configure the GitHub webhook
   from: '[a-zA-Z0-9]{40}'
   generate: expression

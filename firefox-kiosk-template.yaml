@@ -4,11 +4,11 @@ labels:
   template: Kiosk
 metadata:
   annotations:
-    description: Remote Desktop Kiosk - Eclipse
+    description: Remote Desktop Kiosk
     iconClass: icon-tomcat
-    tags: eclipsekiosk
+    tags: kiosk
   creationTimestamp: null
-  name: eclipsekiosk
+  name: kiosk
 objects:
 - apiVersion: v1
   kind: Service
@@ -18,7 +18,7 @@ objects:
     ports:
     - port: 3389
       protocol: TCP
-      name: rhel-xrdp
+      name: centos-xrdp
     selector:
       name: kiosk
 - apiVersion: v1
@@ -34,19 +34,19 @@ objects:
   metadata:
     annotations:
       description: Keeps track of changes in the application image
-    name: rhel-xrdp 
+    name: centos-xrdp 
 - apiVersion: v1
   kind: ImageStream
   metadata:
     annotations:
       description: Keeps track of changes in the application image
-    name: rhel-vnc-eclipse
+    name: centos-vnc-firefox
 - apiVersion: v1
   kind: ImageStream
   metadata:
     annotations:
       description: Keeps track of changes in the application image
-    name: rhel-vnc
+    name: centos-vnc
 - apiVersion: v1
   kind: BuildConfig
   metadata:
@@ -57,7 +57,7 @@ objects:
     output:
       to:
         kind: ImageStreamTag
-        name: rhel-xrdp:latest
+        name: centos-xrdp:latest
     source:
       contextDir: ${XRDP_CONTEXT_DIR}
       git:
@@ -78,12 +78,12 @@ objects:
   metadata:
     annotations:
       description: Defines how to build the application
-    name: rhel-vnc
+    name: centos-vnc
   spec:
     output:
       to:
         kind: ImageStreamTag
-        name: rhel-vnc:latest
+        name: centos-vnc:latest
     source:
       contextDir: ${VNC_CONTEXT_DIR}
       git:
@@ -104,14 +104,14 @@ objects:
   metadata:
     annotations:
       description: Defines how to build the application
-    name: rhel-vnc-eclipse
+    name: centos-vnc-firefox
   spec:
     output:
       to:
         kind: ImageStreamTag
-        name: rhel-vnc-eclipse:latest
+        name: centos-vnc-firefox:latest
     source:
-      contextDir: ${VNC_ECLIPSE_CONTEXT_DIR}
+      contextDir: ${VNC_FIREFOX_CONTEXT_DIR}
       git:
         ref: ${KIOSK_REPOSITORY_REF}
         uri: ${KIOSK_REPOSITORY_URL}
@@ -124,7 +124,7 @@ objects:
     - type: ImageChange
       ImageChange:
         from: 
-          name: rhel-vnc:latest
+          name: centos-vnc:latest
           kind: ImageStreamTag 
 - apiVersion: v1
   kind: DeploymentConfig
@@ -145,12 +145,12 @@ objects:
         name: kiosk
       spec:
         containers:
-        - name: rhel-vnc-eclipse
-          image: rhel-vnc-eclipse
+        - name: centos-vnc-firefox
+          image: centos-vnc-firefox
           ports:
           - containerPort: 5901
-        - name: rhel-xrdp
-          image: rhel-xrdp
+        - name: centos-xrdp
+          image: centos-xrdp
           ports:
           - containerPort: 3389
         nodeSelector:
@@ -159,18 +159,18 @@ objects:
     - imageChangeParams:
         automatic: true
         containerNames:
-        - rhel-xrdp
+        - centos-xrdp
         from:
           kind: ImageStreamTag
-          name: rhel-xrdp:latest
+          name: centos-xrdp:latest
       type: ImageChange
     - imageChangeParams:
         automatic: true
         containerNames:
-        - rhel-vnc-eclipse
+        - centos-vnc-firefox
         from:
           kind: ImageStreamTag
-          name: rhel-vnc-eclipse:latest
+          name: centos-vnc-firefox:latest
       type: ImageChange
     - type: ConfigChange
 
@@ -184,13 +184,13 @@ parameters:
   value: master
 - description: Set this to the subdirectory containing the Dockerfile if it is not in the main directory
   name: XRDP_CONTEXT_DIR
-  value: rhel-xrdp
+  value: centos-xrdp
 - description: Set this to the subdirectory containing the Dockerfile if it is not in the main directory
   name: VNC_CONTEXT_DIR
-  value: rhel-vnc
+  value: centos-vnc
 - description: Set this to the subdirectory containing the Dockerfile if it is not in the main directory
-  name: VNC_ECLIPSE_CONTEXT_DIR
-  value: rhel-vnc-eclipse
+  name: VNC_FIREFOX_CONTEXT_DIR
+  value: centos-vnc-firefox
 - description: A secret string used to configure the GitHub webhook
   from: '[a-zA-Z0-9]{40}'
   generate: expression
