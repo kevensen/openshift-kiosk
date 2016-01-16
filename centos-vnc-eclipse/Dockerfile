@@ -1,9 +1,9 @@
 # Using the VNC image to run Eclipse
 # Version 1
 
-FROM kiosk/centos-vnc
+FROM kevensen/centos-vnc
 
-MAINTAINER Ken Evensen
+MAINTAINER Kenneth D. Evensen <kevensen@redhat.com>
 
 USER root
 RUN yum groupinstall Eclipse; yum clean all; rm -rf /var/cache/yum
