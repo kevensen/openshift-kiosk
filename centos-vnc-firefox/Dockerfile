@@ -1,8 +1,9 @@
 # Using the VNC image to run Firefox
 # Version 1
 
-FROM kiosk/centos-vnc
-MAINTAINER Ken Evensen
+FROM kevensen/centos-vnc
+
+MAINTAINER Kenneth D. Evensen <kevensen@redhat.com>
 
 USER root
 RUN yum install -y firefox spice-xpi; yum clean all; rm -rf /var/cache/yum
