@@ -6,5 +6,6 @@ export SYSFONT
 vncconfig -iconic &
 unset SESSION_MANAGER
 unset DBUS_SESSION_BUS_ADDRESS
+unset DBUS_SESSION_ADDRESS
 OS=`uname -s`
-gnome-session &
+gnome-session&
