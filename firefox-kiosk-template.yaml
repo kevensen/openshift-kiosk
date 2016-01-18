@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: Template
 labels:
-  template: Kiosk
+  template: firefoxkiosk
 metadata:
   annotations:
-    description: Remote Desktop Kiosk
+    description: Remote Desktop Kiosk with Firefox
     iconClass: icon-tomcat
-    tags: kiosk
+    tags: kiosk,firefox,xrdp,vnc
   creationTimestamp: null
-  name: kiosk
+  name: firefoxkiosk
 objects:
 - apiVersion: v1
   kind: Service
@@ -22,110 +22,40 @@ objects:
     selector:
       name: kiosk
 - apiVersion: v1
-  kind: Route
+  kind: Service
   metadata:
-    name: xrdp
+    name: vnc-service
   spec:
-    to:
-      kind: Service
-      name: xrdp-service
+    ports:
+    - port: 5901
+      protocol: TCP
+      name: centos-vnc
+    selector:
+      name: kiosk
 - apiVersion: v1
   kind: ImageStream
   metadata:
     annotations:
       description: Keeps track of changes in the application image
     name: centos-xrdp 
+  spec:
+    tags:
+    - name: "latest"
+      from:
+        Kind: "DockerImage"
+        Name: "docker.io/kevensen/centos-xrdp:latest"
 - apiVersion: v1
   kind: ImageStream
   metadata:
     annotations:
       description: Keeps track of changes in the application image
     name: centos-vnc-firefox
-- apiVersion: v1
-  kind: ImageStream
-  metadata:
-    annotations:
-      description: Keeps track of changes in the application image
-    name: centos-vnc
-- apiVersion: v1
-  kind: BuildConfig
-  metadata:
-    annotations:
-      description: Defines how to build the application
-    name: xrdp
   spec:
-    output:
-      to:
-        kind: ImageStreamTag
-        name: centos-xrdp:latest
-    source:
-      contextDir: ${XRDP_CONTEXT_DIR}
-      git:
-        ref: ${KIOSK_REPOSITORY_REF}
-        uri: ${KIOSK_REPOSITORY_URL}
-      type: Git
-    strategy:
-      dockerStrategy:
-      #  nocache: true
-      type: Docker
-    triggers:
-    - GitHub:
-        secret: ${KIOSK_GITHUB_WEBHOOK_SECRET}
-      type: GitHub
-    - type: ConfigChange
-- apiVersion: v1
-  kind: BuildConfig
-  metadata:
-    annotations:
-      description: Defines how to build the application
-    name: centos-vnc
-  spec:
-    output:
-      to:
-        kind: ImageStreamTag
-        name: centos-vnc:latest
-    source:
-      contextDir: ${VNC_CONTEXT_DIR}
-      git:
-        ref: ${KIOSK_REPOSITORY_REF}
-        uri: ${KIOSK_REPOSITORY_URL}
-      type: Git
-    strategy:
-      dockerStrategy:
-     #   nocache: true
-      type: Docker
-    triggers:
-    - GitHub:
-        secret: ${KIOSK_GITHUB_WEBHOOK_SECRET}
-      type: GitHub
-    - type: ConfigChange
-- apiVersion: v1
-  kind: BuildConfig
-  metadata:
-    annotations:
-      description: Defines how to build the application
-    name: centos-vnc-firefox
-  spec:
-    output:
-      to:
-        kind: ImageStreamTag
-        name: centos-vnc-firefox:latest
-    source:
-      contextDir: ${VNC_FIREFOX_CONTEXT_DIR}
-      git:
-        ref: ${KIOSK_REPOSITORY_REF}
-        uri: ${KIOSK_REPOSITORY_URL}
-      type: Git
-    strategy:
-      dockerStrategy:
-    #    nocache: true
-      type: Docker
-    triggers:
-    - type: ImageChange
-      ImageChange:
-        from: 
-          name: centos-vnc:latest
-          kind: ImageStreamTag 
+    tags:
+    - name: "latest"
+      from:
+        Kind: "DockerImage"
+        Name: "docker.io/kevensen/centos-vnc-firefox:latest"
 - apiVersion: v1
   kind: DeploymentConfig
   metadata:
@@ -173,25 +103,3 @@ objects:
           name: centos-vnc-firefox:latest
       type: ImageChange
     - type: ConfigChange
-
-parameters:
-- description: The URL of the repository with your XRDP Dockerfile
-  name: KIOSK_REPOSITORY_URL
-  value: https://github.com/kevensen/openshift-kiosk
-- description: Set this to a branch name, tag or other ref of your repository if you
-    are not using the default branch
-  name: KIOSK_REPOSITORY_REF
-  value: master
-- description: Set this to the subdirectory containing the Dockerfile if it is not in the main directory
-  name: XRDP_CONTEXT_DIR
-  value: centos-xrdp
-- description: Set this to the subdirectory containing the Dockerfile if it is not in the main directory
-  name: VNC_CONTEXT_DIR
-  value: centos-vnc
-- description: Set this to the subdirectory containing the Dockerfile if it is not in the main directory
-  name: VNC_FIREFOX_CONTEXT_DIR
-  value: centos-vnc-firefox
-- description: A secret string used to configure the GitHub webhook
-  from: '[a-zA-Z0-9]{40}'
-  generate: expression
-  name: KIOSK_GITHUB_WEBHOOK_SECRET

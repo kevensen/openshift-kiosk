@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: Template
 labels:
-  template: Kiosk
+  template: eclipsekiosk
 metadata:
   annotations:
-    description: Remote Desktop Kiosk
+    description: Remote Desktop Kiosk with Eclipse
     iconClass: icon-tomcat
-    tags: kiosk
+    tags: kiosk,eclipse,xrdp,vnc
   creationTimestamp: null
-  name: kiosk
+  name: eclipsekiosk
 objects:
 - apiVersion: v1
   kind: Service
@@ -22,99 +22,40 @@ objects:
     selector:
       name: kiosk
 - apiVersion: v1
+  kind: Service
+  metadata:
+    name: vnc-service
+  spec:
+    ports:
+    - port: 5901
+      protocol: TCP
+      name: centos-vnc
+    selector:
+      name: kiosk
+- apiVersion: v1
   kind: ImageStream
   metadata:
     annotations:
       description: Keeps track of changes in the application image
     name: centos-xrdp 
+  spec:
+    tags:
+    - name: "latest"
+      from:
+        Kind: "DockerImage"
+        Name: "docker.io/kevensen/centos-xrdp:latest"
 - apiVersion: v1
   kind: ImageStream
   metadata:
     annotations:
       description: Keeps track of changes in the application image
     name: centos-vnc-eclipse
-- apiVersion: v1
-  kind: ImageStream
-  metadata:
-    annotations:
-      description: Keeps track of changes in the application image
-    name: centos-vnc
-- apiVersion: v1
-  kind: BuildConfig
-  metadata:
-    annotations:
-      description: Defines how to build the application
-    name: xrdp
   spec:
-    output:
-      to:
-        kind: ImageStreamTag
-        name: centos-xrdp:latest
-    source:
-      contextDir: ${XRDP_CONTEXT_DIR}
-      git:
-        ref: ${KIOSK_REPOSITORY_REF}
-        uri: ${KIOSK_REPOSITORY_URL}
-      type: Git
-    strategy:
-      dockerStrategy:
-      type: Docker
-    triggers:
-    - GitHub:
-        secret: ${KIOSK_GITHUB_WEBHOOK_SECRET}
-      type: GitHub
-    - type: ConfigChange
-- apiVersion: v1
-  kind: BuildConfig
-  metadata:
-    annotations:
-      description: Defines how to build the application
-    name: centos-vnc
-  spec:
-    output:
-      to:
-        kind: ImageStreamTag
-        name: centos-vnc:latest
-    source:
-      contextDir: ${VNC_CONTEXT_DIR}
-      git:
-        ref: ${KIOSK_REPOSITORY_REF}
-        uri: ${KIOSK_REPOSITORY_URL}
-      type: Git
-    strategy:
-      dockerStrategy:
-      type: Docker
-    triggers:
-    - GitHub:
-        secret: ${KIOSK_GITHUB_WEBHOOK_SECRET}
-      type: GitHub
-    - type: ConfigChange
-- apiVersion: v1
-  kind: BuildConfig
-  metadata:
-    annotations:
-      description: Defines how to build the application
-    name: centos-vnc-eclipse
-  spec:
-    output:
-      to:
-        kind: ImageStreamTag
-        name: centos-vnc-eclipse:latest
-    source:
-      contextDir: ${VNC_ECLIPSE_CONTEXT_DIR}
-      git:
-        ref: ${KIOSK_REPOSITORY_REF}
-        uri: ${KIOSK_REPOSITORY_URL}
-      type: Git
-    strategy:
-      dockerStrategy:
-      type: Docker
-    triggers:
-    - type: ImageChange
-      ImageChange:
-        from: 
-          name: centos-vnc:latest
-          kind: ImageStreamTag 
+    tags:
+    - name: "latest"
+      from:
+        Kind: "DockerImage"
+        Name: "docker.io/kevensen/centos-vnc-eclipse:latest"
 - apiVersion: v1
   kind: DeploymentConfig
   metadata:
@@ -162,25 +103,3 @@ objects:
           name: centos-vnc-eclipse:latest
       type: ImageChange
     - type: ConfigChange
-
-parameters:
-- description: The URL of the repository with your XRDP Dockerfile
-  name: KIOSK_REPOSITORY_URL
-  value: https://github.com/kevensen/openshift-kiosk
-- description: Set this to a branch name, tag or other ref of your repository if you
-    are not using the default branch
-  name: KIOSK_REPOSITORY_REF
-  value: master
-- description: Set this to the subdirectory containing the Dockerfile if it is not in the main directory
-  name: XRDP_CONTEXT_DIR
-  value: centos-xrdp
-- description: Set this to the subdirectory containing the Dockerfile if it is not in the main directory
-  name: VNC_CONTEXT_DIR
-  value: centos-vnc
-- description: Set this to the subdirectory containing the Dockerfile if it is not in the main directory
-  name: VNC_ECLIPSE_CONTEXT_DIR
-  value: centos-vnc-eclipse
-- description: A secret string used to configure the GitHub webhook
-  from: '[a-zA-Z0-9]{40}'
-  generate: expression
-  name: KIOSK_GITHUB_WEBHOOK_SECRET

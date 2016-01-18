@@ -55,6 +55,33 @@ objects:
   metadata:
     annotations:
       description: Keeps track of changes in the application image
+    name: guacamole
+  spec:
+    tags:
+    - name: "latest"
+      from:
+        Kind: "DockerImage"
+        Name: "docker.io/glyptodon/guacamole:latest"
+
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    annotations:
+      description: Keeps track of changes in the application image
+    name: guacd
+  spec:
+    tags:
+    - name: "latest"
+      from:
+        Kind: "DockerImage"
+        Name: "docker.io/glyptodon/guacd:latest"
+
+
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    annotations:
+      description: Keeps track of changes in the application image
     name: mysql-guacamole
 
 - apiVersion: v1
@@ -114,7 +141,7 @@ objects:
         name: guacd
       spec:
         containers:
-        - image: glyptodon/guacd:latest
+        - image: guacd:latest
           name: guacd
           ports:
           - containerPort: 4822
@@ -122,6 +149,17 @@ objects:
           role: frontend
     triggers:
     - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - guacd
+        from:
+          kind: ImageStreamTag
+          name: guacd:latest
+      type: ImageChange
+
+
+
 - apiVersion: v1
   kind: DeploymentConfig
   metadata:
@@ -141,7 +179,7 @@ objects:
         name: guacamole
       spec:
         containers:
-        - image: glyptodon/guacamole:latest
+        - image: guacamole:latest
           name: guacamole
           ports:
           - containerPort: 8080
@@ -152,8 +190,20 @@ objects:
             value: ${MYSQL_PASSWORD}
           - name: MYSQL_DATABASE
             value: ${MYSQL_DATABASE}
+          - name: MYSQL_NAME
+            value: mysqlhasafirstnameitsoscar
         nodeSelector:
           role: frontend
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - guacamole
+        from:
+          kind: ImageStreamTag
+          name: guacamole:latest
+      type: ImageChange
 
 - apiVersion: v1
   kind: DeploymentConfig
