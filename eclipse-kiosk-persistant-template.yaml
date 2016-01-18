@@ -1,0 +1,129 @@
+apiVersion: v1
+kind: Template
+labels:
+  template: eclipsekioskpersistant
+metadata:
+  annotations:
+    description: Remote Desktop Kiosk with Eclipse and Persistant Workspace
+    iconClass: icon-tomcat
+    tags: kiosk,eclipse,xrdp,vnc
+  creationTimestamp: null
+  name: eclipsekiosk
+objects:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: xrdp-service
+  spec:
+    ports:
+    - port: 3389
+      protocol: TCP
+      name: centos-xrdp
+    selector:
+      name: kiosk
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: vnc-service
+  spec:
+    ports:
+    - port: 5901
+      protocol: TCP
+      name: centos-vnc
+    selector:
+      name: kiosk
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    annotations:
+      description: Keeps track of changes in the application image
+    name: centos-xrdp 
+  spec:
+    tags:
+    - name: "latest"
+      from:
+        Kind: "DockerImage"
+        Name: "docker.io/kevensen/centos-xrdp:latest"
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    annotations:
+      description: Keeps track of changes in the application image
+    name: centos-vnc-eclipse
+  spec:
+    tags:
+    - name: "latest"
+      from:
+        Kind: "DockerImage"
+        Name: "docker.io/kevensen/centos-vnc-eclipse:latest"
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    annotations:
+      description: Defines how to deploy the application server
+    name: kiosk
+  spec:
+    replicas: 1
+    selector:
+      name: kiosk
+    strategy:
+      type: Rolling
+    template:
+      metadata:
+        labels:
+          name: kiosk
+        name: kiosk
+      spec:
+        containers:
+        - name: centos-vnc-eclipse
+          image: centos-vnc-eclipse
+          ports:
+          - containerPort: 5901
+          volumeMounts:
+          - mountPath: /home/kioskuser/workspace
+            name: eclipse-volume
+        - name: centos-xrdp
+          image: centos-xrdp
+          ports:
+          - containerPort: 3389
+        nodeSelector:
+          role: backend
+        volumes:
+        - name: eclipse-volume
+          persistentVolumeClaim:
+            claimName: eclipse-pvc
+    triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - centos-xrdp
+        from:
+          kind: ImageStreamTag
+          name: centos-xrdp:latest
+      type: ImageChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - centos-vnc-eclipse
+        from:
+          kind: ImageStreamTag
+          name: centos-vnc-eclipse:latest
+      type: ImageChange
+    - type: ConfigChange
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: eclipse-pvc
+  spec:
+    accessModes:
+    - ReadWriteMany
+    resources:
+      requests:
+        storage: ${DATA_VOLUME_CAPACITY}
+
+parameters:
+- description: Volume space available for data, e.g. 512Mi, 2Gi
+  name: DATA_VOLUME_CAPACITY
+  required: true
+  value: 5Gi
+
