@@ -9,7 +9,7 @@ LABEL io.openshift.expose-services="5901:tcp"
 
 USER root
 ENV DISPLAY ""
-RUN yum install -y tigervnc-server \
+RUN yum update -y && yum install -y tigervnc-server \
                    xorg-x11-server-utils \
                    xorg-x11-server-Xvfb \
                    xorg-x11-fonts-Type1 \
