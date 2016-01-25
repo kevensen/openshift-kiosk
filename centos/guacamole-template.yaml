@@ -5,29 +5,29 @@ labels:
 metadata:
   annotations:
     description: Guacamole XRDP and VNC over HTML5
-    iconClass: icon-tomcat
-    tags: guacamole
+    iconClass: icon-mysql
+    tags: guacamole,mysql
   creationTimestamp: null
   name: guacamole
 objects:
-- apiVersion: v1
-  kind: Route
-  metadata:
-    name: guacamole
-  spec:
-    to:
-      kind: Service
-      name: guacamole
-- apiVersion: v1
-  kind: Service
-  metadata:
-    name: guacamole
-  spec:
-    ports:
-    - port: 8080
-      protocol: TCP
-    selector:
-      name: guacamole
+#- apiVersion: v1
+#  kind: Route
+#  metadata:
+#    name: guacamole
+#  spec:
+#    to:
+#      kind: Service
+#      name: guacamole
+#- apiVersion: v1
+#  kind: Service
+#  metadata:
+#    name: guacamole
+#  spec:
+#    ports:
+#    - port: 8080
+#      protocol: TCP
+#    selector:
+#      name: guacamole
 - apiVersion: v1
   kind: Service
   metadata:
@@ -50,18 +50,18 @@ objects:
     selector:
       name: mysql-guacamole
 
-- apiVersion: v1
-  kind: ImageStream
-  metadata:
-    annotations:
-      description: Keeps track of changes in the application image
-    name: guacamole
-  spec:
-    tags:
-    - name: "latest"
-      from:
-        Kind: "DockerImage"
-        Name: "docker.io/glyptodon/guacamole:latest"
+#- apiVersion: v1
+#  kind: ImageStream
+#  metadata:
+#    annotations:
+#      description: Keeps track of changes in the application image
+#    name: guacamole
+#  spec:
+#    tags:
+#    - name: "latest"
+#      from:
+#        Kind: "DockerImage"
+#        Name: "docker.io/glyptodon/guacamole:latest"
 
 - apiVersion: v1
   kind: ImageStream
@@ -160,50 +160,50 @@ objects:
 
 
 
-- apiVersion: v1
-  kind: DeploymentConfig
-  metadata:
-    annotations:
-      description: Defines how to deploy the application server
-    name: guacamole
-  spec:
-    replicas: 1
-    selector:
-      name: guacamole
-    strategy:
-      type: Rolling
-    template:
-      metadata:
-        labels:
-          name: guacamole
-        name: guacamole
-      spec:
-        containers:
-        - image: guacamole:latest
-          name: guacamole
-          ports:
-          - containerPort: 8080
-          env:
-          - name: MYSQL_USER
-            value: ${MYSQL_USER}
-          - name: MYSQL_PASSWORD
-            value: ${MYSQL_PASSWORD}
-          - name: MYSQL_DATABASE
-            value: ${MYSQL_DATABASE}
-          - name: MYSQL_NAME
-            value: mysqlhasafirstnameitsoscar
-        nodeSelector:
-          role: frontend
-    triggers:
-    - type: ConfigChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - guacamole
-        from:
-          kind: ImageStreamTag
-          name: guacamole:latest
-      type: ImageChange
+# - apiVersion: v1
+#   kind: DeploymentConfig
+#   metadata:
+#     annotations:
+#       description: Defines how to deploy the application server
+#     name: guacamole
+#   spec:
+#     replicas: 1
+#     selector:
+#       name: guacamole
+#     strategy:
+#       type: Rolling
+#     template:
+#       metadata:
+#         labels:
+#           name: guacamole
+#         name: guacamole
+#       spec:
+#         containers:
+#         - image: guacamole:latest
+#           name: guacamole
+#           ports:
+#           - containerPort: 8080
+#           env:
+#           - name: MYSQL_USER
+#             value: ${MYSQL_USER}
+#           - name: MYSQL_PASSWORD
+#             value: ${MYSQL_PASSWORD}
+#           - name: MYSQL_DATABASE
+#             value: ${MYSQL_DATABASE}
+#           - name: MYSQL_NAME
+#             value: mysqlhasafirstnameitsoscar
+#         nodeSelector:
+#           role: frontend
+#     triggers:
+#     - type: ConfigChange
+#     - imageChangeParams:
+#         automatic: true
+#         containerNames:
+#         - guacamole
+#         from:
+#           kind: ImageStreamTag
+#           name: guacamole:latest
+#      type: ImageChange
 
 - apiVersion: v1
   kind: DeploymentConfig
