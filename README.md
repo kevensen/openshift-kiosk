@@ -29,3 +29,6 @@ If you wish to build or run a kiosk without OpenShift, I recommend you look at c
 4.) mysql-guacamole
 
 From there, I would move on to running Guacamole.
+
+## Building with OpenShift
+Included are a number of templates that will enable deployment.
