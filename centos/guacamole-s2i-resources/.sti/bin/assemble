@@ -1,0 +1,26 @@
+#!/bin/bash -e
+#
+# S2I assemble script for the 'guacamole-s2i' image.
+# The 'assemble' script builds your application source so that it is ready to run.
+#
+# For more information refer to the documentation:
+#	https://github.com/openshift/source-to-image/blob/master/docs/builder_image.md
+#
+
+# Source code provided to STI is at ${HOME}/source
+LOCAL_SOURCE_DIR=${HOME}/source
+mkdir -p $LOCAL_SOURCE_DIR
+
+DEPLOY_DIR=$TOMCAT_HOME/webapps
+
+# the subdirectory within LOCAL_SOURCE_DIR from where we should copy build artifacts
+ARTIFACT_DIR=${ARTIFACT_DIR-target}
+
+
+# Copy the source for compilation
+cp -ad /tmp/src/* $LOCAL_SOURCE_DIR
+
+if [ -d $LOCAL_SOURCE_DIR/configuration ]; then
+  echo "Copying config files from project..."
+  cp -v $LOCAL_SOURCE_DIR/configuration/* $TOMCAT_HOME/conf/
+fi
