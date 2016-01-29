@@ -1,0 +1,3 @@
+GUAC_VERSION=0.9.9
+GUAC_JDBC_VERSION=0.9.9
+GUACAMOLE_SCRIPTS_URL="https://raw.githubusercontent.com/glyptodon/guacamole-docker/master/bin/"

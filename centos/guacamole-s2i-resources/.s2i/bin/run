@@ -32,4 +32,4 @@ function configure_https() {
 
 configure_https
 
-exec catalina.sh /opt/guacamole/bin/start.sh
+exec /opt/webapps/guacamole/start.sh
