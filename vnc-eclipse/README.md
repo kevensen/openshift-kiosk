@@ -1,7 +1,7 @@
 # CentOS VNC Eclipse
 ## Building the container
 ```bash
-$ docker build -t kevensen/centos-vnc-eclipse
+$ docker build -t kevensen/centos-vnc-eclipse .
 ```
 ## Running the container
 ```bash
