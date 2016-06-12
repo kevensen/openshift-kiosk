@@ -1,7 +1,7 @@
 # CentOS VNC Firefox
 ## Building the container
 ```bash
-docker build -t kevensen/centos-vnc-firefox
+docker build -t kevensen/centos-vnc-firefox .
 ```
 ## Running the container
 ```bash

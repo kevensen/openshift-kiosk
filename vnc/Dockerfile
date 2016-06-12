@@ -8,25 +8,33 @@ MAINTAINER Ken Evensen
 LABEL io.openshift.expose-services="5901:tcp"
 
 USER root
-ENV DISPLAY ""
-RUN yum update -y && yum install -y tigervnc-server \
-                   xorg-x11-server-utils \
-                   xorg-x11-server-Xvfb \
-                   xorg-x11-fonts-Type1 \
-                   xorg-x11-fonts-misc \
-                   xorg-x11-fonts-75dpi \
-                   xorg-x11-fonts-100dpi \
-                   xterm \
-                   gnome-session && yum clean all; rm -rf /var/cache/yum
+ENV DISPLAY="" \
+    HOME=/home/1001
 
+ARG vncpassword=password
+
+RUN yum clean all && \
+    yum update -y && \
+    yum install -y --setopt=tsflags=nodocs \
+                   tigervnc-server \
+    		   xorg-x11-server-utils \
+                   xorg-x11-server-Xvfb \
+                   xorg-x11-fonts-* \
+                   xterm \
+                   gnome-session && \
+                   yum clean all && \
+                   rm -rf /var/cache/yum
 
 RUN /bin/dbus-uuidgen --ensure
+RUN useradd -u 1001 -r -g 0 -d ${HOME} -s /sbin/nologin -c "Kiosk User" kioskuser
 
-RUN useradd kioskuser; mkdir -p /home/kioskuser/.vnc
-ADD xstartup /home/kioskuser/.vnc/
-ADD passwd /home/kioskuser/.vnc/
-RUN chown -R kioskuser:kioskuser /home/kioskuser; chmod 775 /home/kioskuser/.vnc/xstartup; chmod 600 /home/kioskuser/.vnc/passwd
+ADD xstartup ${HOME}/.vnc/
+RUN echo "${vncpassword}" | vncpasswd -f > ${HOME}/.vnc/passwd
+
+RUN chown -R 1001:0 ${HOME} && \
+    chmod 775 ${HOME}/.vnc/xstartup && \
+    chmod 600 ${HOME}/.vnc/passwd
 
 EXPOSE 5901
-
+WORKDIR ${HOME}
 ENTRYPOINT ["/usr/bin/vncserver","-fg"]
