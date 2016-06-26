@@ -35,13 +35,13 @@ RUN useradd -u 1001 -r -g 0 -d ${HOME} -s /sbin/nologin -c "Kiosk User" kioskuse
 
 ADD xstartup ${HOME}/.vnc/
 RUN echo "${vncpassword}" | vncpasswd -f > ${HOME}/.vnc/passwd
+RUN /bin/echo "/usr/bin/firefox" >> /home/1001/.vnc/xstartup
 
 RUN chown -R 1001:0 ${HOME} && \
     chmod 775 ${HOME}/.vnc/xstartup && \
     chmod 600 ${HOME}/.vnc/passwd
 
-RUN /bin/echo "/usr/bin/firefox" >> /home/1001/.vnc/xstartup
-
 EXPOSE 5901
 WORKDIR ${HOME}
+USER 1001
 ENTRYPOINT ["/usr/bin/vncserver","-fg"]
