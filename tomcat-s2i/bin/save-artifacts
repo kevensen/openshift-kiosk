@@ -1,4 +1,0 @@
-#!/bin/sh
-set -ue
-. $(dirname $0)/common.sh
-s2i_save_build_artifacts

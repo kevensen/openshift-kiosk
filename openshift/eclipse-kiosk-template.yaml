@@ -42,8 +42,8 @@ objects:
     tags:
     - name: "latest"
       from:
-        Kind: "DockerImage"
-        Name: "docker.io/kevensen/centos-xrdp:latest"
+        kind: "DockerImage"
+        name: "docker.io/kevensen/centos-xrdp:latest"
 - apiVersion: v1
   kind: ImageStream
   metadata:
@@ -54,8 +54,8 @@ objects:
     tags:
     - name: "latest"
       from:
-        Kind: "DockerImage"
-        Name: "docker.io/kevensen/centos-vnc-eclipse:latest"
+        kind: "DockerImage"
+        name: "docker.io/kevensen/centos-vnc-eclipse:latest"
 - apiVersion: v1
   kind: DeploymentConfig
   metadata:
