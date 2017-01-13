@@ -11,21 +11,18 @@ In Docker fashion, the Docker images are constructed in a layered manner.
 For example, the centos/centos-vnc container simply installs the base Gnome desktop as well as a Tiger VNC server.  Applications are then installed via separate Docker files using the centos-vnc image.
 
 ## Project Layout
-This framework is organized into CentOS and RHEL based images.  
-
 The CentOS images are built automatically on <a href="hub.docker.com">Docker Hub</a>.  Simply invoking a "docker pull" will allow you to obtain the desired image.  Should you wish to deploy the CentOS based images to OpenShift, the images are pulled from Docker Hub.  In other words, there are no build configs for these images in the yaml templates.
 
 On the other hand, the RHEL based images will need to be constructed in your own environment.  This shouldn't be a big deal; but it just takes a little more time.
 
 ## Getting Started
-If you wish to build or run a kiosk without OpenShift, I recommend you look at content in the "centos" folder.  From there, you should build and run the Docker containers in the following order.
+If you wish to build or run a kiosk without OpenShift, I recommend you build and run the Docker containers in the following order.
 
-1.) centos-vnc
+1.) vnc
 
-2.) centos-vnc-firefox and/or centos-vnc-eclipse
+2.) vnc-firefox and/or vnc-eclipse
 
-3.) centos-xrdp
-
+3.) xrdp
 
 From there, I would move on to running Guacamole.
 
