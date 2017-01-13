@@ -6,7 +6,7 @@ metadata:
   annotations:
     description: Guacamole XRDP and VNC over HTML5
     iconClass: icon-tomcat
-    tags: guacamole,mysql
+    tags: guacamole
   creationTimestamp: null
   name: guacamole
 objects:
@@ -25,13 +25,6 @@ objects:
     dockerImageRepository: ${GUACAMOLE_IMAGE_NAME}
 
 - apiVersion: v1
-  kind: ImageStream
-  metadata:
-    annotations:
-      description: Keeps track of changes in the application image
-    name: mysql-guacamole
-
-- apiVersion: v1
   kind: Service
   metadata:
     name: guacd
@@ -42,18 +35,6 @@ objects:
       targetPort: 4822
     selector:
       name: guacd
-
-- apiVersion: v1
-  kind: Service
-  metadata:
-    name: mysql
-  spec:
-    ports:
-    - port: 3306
-      protocol: TCP
-      targetPort: 3306
-    selector:
-      name: mysql-guacamole
 
 - apiVersion: v1
   kind: Service
@@ -75,87 +56,6 @@ objects:
     to:
       kind: Service
       name: guacamole
-
-- apiVersion: v1
-  kind: BuildConfig
-  metadata:
-    annotations:
-      description: Defines how to build the application
-    name: mysql-guacamole
-  spec:
-    output:
-      to:
-        kind: ImageStreamTag
-        name: mysql-guacamole:latest
-    source:
-      contextDir: ${MYSQL_GUACAMOLE_CONTEXT_DIR}
-      git:
-        ref: ${MYSQL_GUACAMOLE_REPOSITORY_REF}
-        uri: ${MYSQL_GUACAMOLE_REPOSITORY_URL}
-      type: Git
-    strategy:
-      dockerStrategy:
-        env:
-        - name: MYSQL_PASSWORD
-          value: ${MYSQL_PASSWORD}
-        - name: MYSQL_USER
-          value: ${MYSQL_USER}
-        - name: MYSQL_DATABASE
-          value: ${MYSQL_DATABASE}
-      type: Docker
-    triggers:
-    - github:
-        secret: ${GITHUB_WEBHOOK_SECRET}
-      type: GitHub
-    - type: ConfigChange
-    - type: ImageChange
-      ImageChange:
-        from: 
-          name: openshift/mysql:latest
-          kind: ImageStreamTag 
-
-- apiVersion: v1
-  kind: DeploymentConfig
-  metadata:
-    annotations:
-      description: Defines how to deploy the application server
-    name: mysql-guacamole
-  spec:
-    replicas: 1
-    selector:
-      name: mysql-guacamole
-    strategy:
-      type: Rolling
-    template:
-      metadata:
-        labels:
-          name: mysql-guacamole
-        name: mysql-guacamole
-      spec:
-        containers:
-        - image: mysql-guacamole:latest
-          name: mysql-guacamole
-          ports:
-          - containerPort: 3306
-            protocol: TCP
-          env:
-          - name: MYSQL_PASSWORD
-            value: ${MYSQL_PASSWORD}
-          - name: MYSQL_USER
-            value: ${MYSQL_USER}
-          - name: MYSQL_DATABASE
-            value: ${MYSQL_DATABASE}
-    triggers:
-    - type: ConfigChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - mysql-guacamole
-        from:
-          kind: ImageStreamTag
-          name: mysql-guacamole:latest
-      type: ImageChange
-
 
 - apiVersion: v1
   kind: DeploymentConfig
@@ -249,20 +149,6 @@ parameters:
   from: '[a-zA-Z0-9]{40}'
   generate: expression
   name: GITHUB_WEBHOOK_SECRET
-
-- description: The URL of the repository with your mysql-guacamole Dockerfile
-  name: MYSQL_GUACAMOLE_REPOSITORY_URL
-  value: https://github.com/kevensen/openshift-kiosk
-  required: true
-- description: Set this to a branch name, tag or other ref of your repository if you
-    are not using the default branch
-  name: MYSQL_GUACAMOLE_REPOSITORY_REF
-  value: master
-  required: true
-- description: Set this to the subdirectory containing the Dockerfile if it is not in the main directory
-  name: MYSQL_GUACAMOLE_CONTEXT_DIR
-  value: mysql-guacamole
-  required: true
 
 - description: The username for the MySQL user
   name: MYSQL_USER
