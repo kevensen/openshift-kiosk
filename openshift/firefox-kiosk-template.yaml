@@ -1,0 +1,210 @@
+apiVersion: v1
+kind: Template
+labels:
+  template: firefoxkiosk
+metadata:
+  annotations:
+    description: Remote Desktop Kiosk with Firefox
+    iconClass: icon-tomcat
+    tags: kiosk,firefox,xrdp,vnc
+  creationTimestamp: null
+  name: firefoxkiosk
+objects:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: xrdp-service
+  spec:
+    ports:
+    - name: xrdp
+      port: 3389
+      protocol: TCP
+    selector:
+      name: kiosk
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: vnc-service
+  spec:
+    ports:
+    - name: vnc
+      port: 5901
+      protocol: TCP
+    selector:
+      name: kiosk
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    annotations:
+      description: Keeps track of changes in the application image
+    name: vnc
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    annotations:
+      description: Keeps track of changes in the application image
+    name: vnc-firefox
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    annotations:
+      description: Keeps track of changes in the application image
+    name: xrdp
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    annotations:
+      description: Defines how to build the application
+    name: vnc
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: vnc:latest
+    source:
+      contextDir: ${VNC_CONTEXT_DIR}
+      git:
+        ref: ${VNC_REPOSITORY_REF}
+        uri: ${GITHUB_REPOSITORY_URL}
+      type: Git
+    strategy:
+      dockerStrategy: null
+      type: Docker
+    triggers:
+    - github:
+        secret: ${GITHUB_WEBHOOK_SECRET}
+      type: GitHub
+    - type: ConfigChange
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    annotations:
+      description: Defines how to build the application
+    name: vnc-firefox
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: vnc-firefox:latest
+    source:
+      contextDir: ${VNC_FIREFOX_CONTEXT_DIR}
+      git:
+        ref: ${VNC_FIREFOX_REPOSITORY_REF}
+        uri: ${GITHUB_REPOSITORY_URL}
+      type: Git
+    strategy:
+      dockerStrategy: null
+      type: Docker
+    triggers:
+    - type: ConfigChange
+    - imageChange:
+        from:
+          kind: ImageStreamTag
+          name: vnc:latest
+      type: ImageChange
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    annotations:
+      description: Defines how to build the application
+    name: xrdp
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: xrdp:latest
+    source:
+      contextDir: ${XRDP_CONTEXT_DIR}
+      git:
+        ref: ${XRDP_REPOSITORY_REF}
+        uri: ${GITHUB_REPOSITORY_URL}
+      type: Git
+    strategy:
+      dockerStrategy: null
+      type: Docker
+    triggers:
+    - github:
+        secret: ${GITHUB_WEBHOOK_SECRET}
+      type: GitHub
+    - type: ConfigChange
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    annotations:
+      description: Defines how to deploy the application server
+    name: kiosk
+  spec:
+    replicas: 1
+    selector:
+      name: kiosk
+    strategy:
+      type: Rolling
+    template:
+      metadata:
+        labels:
+          name: kiosk
+        name: kiosk
+      spec:
+        containers:
+        - image: vnc-firefox
+          name: vnc-firefox
+          ports:
+          - containerPort: 5901
+        - image: xrdp
+          name: xrdp
+          ports:
+          - containerPort: 3389
+    triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - xrdp
+        from:
+          kind: ImageStreamTag
+          name: xrdp:latest
+      type: ImageChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - vnc-firefox
+        from:
+          kind: ImageStreamTag
+          name: vnc-firefox:latest
+      type: ImageChange
+    - type: ConfigChange
+parameters:
+- description: The URL of the repository containing the kiosk Dockerfiles
+  displayName: Kiosk git Repo
+  name: GITHUB_REPOSITORY_URL
+  required: true
+  value: https://github.com/kevensen/openshift-kiosk
+- description: The repository reference for the VNC Dockerfile
+  displayName: VNC Dockerfile Repoistory Branch
+  name: VNC_REPOSITORY_REF
+  required: true
+  value: master
+- description: Set this to the subdirectory containing the VNC Dockerfile
+  displayName: VNC Dockerfile Context Directory
+  name: VNC_CONTEXT_DIR
+  required: true
+  value: vnc
+- description: The repository reference for the Firefox VNC Dockerfile
+  displayName: VNC Dockerfile Repoistory Branch
+  name: VNC_FIREFOX_REPOSITORY_REF
+  required: true
+  value: master
+- description: Set this to the subdirectory containing the centos-vnc Dockerfile
+  displayName: VNC Firefox Dockerfile Context Directory
+  name: VNC_FIREFOX_CONTEXT_DIR
+  required: true
+  value: vnc-firefox
+- description: The repository reference for the XRDP Dockerfile
+  displayName: XRDP Dockerfile Repoistory Branch
+  name: XRDP_REPOSITORY_REF
+  required: true
+  value: master
+- description: Set this to the subdirectory containing the centos-vnc Dockerfile
+  displayName: VNC Dockerfile Context Directory
+  name: XRDP_CONTEXT_DIR
+  required: true
+  value: xrdp

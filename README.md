@@ -26,7 +26,6 @@ If you wish to build or run a kiosk without OpenShift, I recommend you look at c
 
 3.) centos-xrdp
 
-4.) mysql-guacamole
 
 From there, I would move on to running Guacamole.
 
