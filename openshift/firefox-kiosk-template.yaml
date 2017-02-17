@@ -189,7 +189,7 @@ parameters:
   required: true
   value: vnc
 - description: The repository reference for the Firefox VNC Dockerfile
-  displayName: VNC Dockerfile Repoistory Branch
+  displayName: VNC Dockerfile Repository Branch
   name: VNC_FIREFOX_REPOSITORY_REF
   required: true
   value: master
