@@ -2,7 +2,7 @@
 # Version 1
 
 # Pull the rhel image from the local repository
-FROM centos:7
+FROM centos:6
 MAINTAINER Ken Evensen
 
 LABEL io.openshift.expose-services="5901:tcp"
@@ -36,7 +36,6 @@ RUN useradd -u 1001 -r -g 0 -d ${HOME} -s /bin/bash -c "Kiosk User" kioskuser
 
 ADD xstartup ${HOME}/.vnc/
 RUN echo "${vncpassword}" | vncpasswd -f > ${HOME}/.vnc/passwd
-# RUN /bin/echo "/usr/bin/firefox" >> /home/1001/.vnc/xstartup
 RUN touch /home/1001/.Xauthority
 
 RUN chown -R 1001:0 ${HOME} && \
