@@ -10,5 +10,7 @@ RUN yum install -y --setopt=tsflags=nodocs \
                   firefox \
                   yum clean all && \
                   rm -rf /var/cache/yum/*
-RUN /bin/echo "/usr/bin/firefox" >> /home/1001/.vnc/xstartup 
+
+RUN /bin/echo 'xterm -geometry 80x24+10+10 -ls -title "$VNCDESKTOP Desktop" firefox & ' >> /home/1001/.vnc/xstartup 
+RUN /bin/echo 'mwm' >> /home/1001/.vnc/xstartup 
 USER 1001

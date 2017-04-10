@@ -3,9 +3,8 @@
 [ -r /etc/sysconfig/i18n ] && . /etc/sysconfig/i18n
 export LANG
 export SYSFONT
-vncconfig -iconic &
+export DISPLAY=:1
 unset SESSION_MANAGER
 unset DBUS_SESSION_BUS_ADDRESS
-unset DBUS_SESSION_ADDRESS
-OS=`uname -s`
-gnome-session&
+[ -r $HOME/.Xresources ] && xrdb $HOME/.Xresources
+xsetroot -solid grey
