@@ -1,0 +1,238 @@
+apiVersion: v1
+kind: Template
+metadata:
+  annotations:
+    description: Guacamole XRDP and VNC over HTML5
+    iconClass: icon-tomcat
+    tags: guacamole,kiosk,tomcat
+  name: guacamole
+objects:
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    name: guacamole-client
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: ${DATABASE_SERVICE_NAME}
+  spec:
+    ports:
+    - name: mariadb
+      port: 3306
+    selector:
+      name: ${DATABASE_SERVICE_NAME}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: guacamole-client
+  spec:
+    ports:
+    - name: http
+      port: 8080
+    selector:
+      name: guacamole-client
+
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    name: guacamole-client
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: guacamole-client:latest
+    source:
+      git:
+        ref: ${GUACAMOLE_CLIENT_REF}
+        uri: ${GUACAMOLE_CLIENT_URL}
+      contextDir: ${GUACAMOLE_CONTEXT_DIR}
+      type: Git
+    strategy:
+      type: Source
+      sourceStrategy:
+        from:
+          kind: ImageStreamTag
+          name: jboss-webserver30-tomcat8-openshift:latest
+          namespace: openshift
+        env:
+          - name: ARTIFACT_DIR
+            value: "guacamole/target,extensions/guacamole-auth-jdbc/modules/guacamole-auth-jdbc-mysql/target"
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        from:
+          kind: ImageStreamTag
+          namespace: openshift
+          name: jboss-webserver30-tomcat8-openshift:latest
+      type: ImageChange
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    name: ${DATABASE_SERVICE_NAME}
+  spec:
+    replicas: 1
+    selector:
+      name: ${DATABASE_SERVICE_NAME}
+    strategy:
+      type: Recreate
+    template:
+      metadata:
+        labels:
+          name: ${DATABASE_SERVICE_NAME}
+      spec:
+        containers:
+        - env:
+          - name: MYSQL_USER
+            value: ${MYSQL_USER}
+          - name: MYSQL_PASSWORD
+            value: ${MYSQL_PASSWORD}
+          - name: MYSQL_DATABASE
+            value: ${MYSQL_DATABASE}
+          image: ' '
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            initialDelaySeconds: 30
+            tcpSocket:
+              port: 3306
+            timeoutSeconds: 1
+          name: mariadb
+          ports:
+          - containerPort: 3306
+          readinessProbe:
+            exec:
+              command:
+              - /bin/sh
+              - -i
+              - -c
+              - MYSQL_PWD="$MYSQL_PASSWORD" mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE
+                -e 'SELECT 1'
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+          resources:
+            limits:
+              memory: ${MEMORY_LIMIT}
+          volumeMounts:
+          - mountPath: /var/lib/mysql/data
+            name: ${DATABASE_SERVICE_NAME}-data
+        volumes:
+        - emptyDir:
+            medium: ""
+          name: ${DATABASE_SERVICE_NAME}-data
+    triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - mariadb
+        from:
+          kind: ImageStreamTag
+          name: mariadb:10.1
+          namespace: ${NAMESPACE}
+      type: ImageChange
+    - type: ConfigChange
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    name: guacamole-client
+    labels:
+      app: guacamole-client
+  spec:
+    replicas: 1
+    selector:
+      name: guacamole-client
+    strategy:
+      type: Recreate
+      recreateParams:
+        pre:
+          failurePolicy: Retry
+          execNewPod:
+            containerName: guacamole-client
+            command: [ "/bin/echo", "hello" ]
+    template:
+      metadata:
+        labels:
+          name: guacamole-client
+      spec:
+        containers:
+        - env:
+          - name: GUACD_HOSTNAME
+            value: guacamole-server
+          - name: GUACD_PORT
+            value: ${GUACD_PORT}
+          - name: MYSQL_PASSWORD
+            value: ${MYSQL_PASSWORD}
+          - name: MYSQL_DATABASE
+            value: ${MYSQL_DATABASE}
+          - name: MYSQL_USER
+            value: ${MYSQL_DATABASE}
+          - name: MYSQL_HOSTNAME
+            value: ${MYSQL_HOSTNAME}
+          - name: MYSQL_PORT
+            value: "3306"
+          image: guacamole-client:latest
+          imagePullPolicy: IfNotPresent
+          name: guacamole-client
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+          volumeMounts:
+          terminationMessagePath: /dev/termination-log
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        terminationGracePeriodSeconds: 30
+    test: false
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - guacamole-db
+        from:
+          kind: ImageStreamTag
+          name: guacamole-client:latest
+      type: ImageChange
+parameters:
+- description: The git repository containing the application source code
+  displayName: Client Source git Repository
+  name: GUACAMOLE_CLIENT_URL
+  required: true
+- description: Set this to a branch name, tag or other ref of your repository if you are not using the default branch
+  displayName: gcc Source Branch
+  name: GUACAMOLE_CLIENT_REF
+  value: master
+  required: true
+- description: Set this to the subdirectory containing the source code if it is not in the main directory
+  displayName: gcc Source Context Directory
+  name: GUACAMOLE_CONTEXT_DIR
+  value: /
+  required: true
+- description: Maximum amount of memory the container can use.
+  displayName: Memory Limit
+  name: MEMORY_LIMIT
+  required: true
+  value: 512Mi
+- description: The OpenShift Namespace where the ImageStream resides.
+  displayName: Namespace
+  name: NAMESPACE
+  value: openshift
+- description: The name of the OpenShift Service exposed for the database.
+  displayName: Database Service Name
+  name: DATABASE_SERVICE_NAME
+  required: true
+  value: mariadb
+- description: Username for MariaDB user that will be used for accessing the database.
+  displayName: MariaDB Connection Username
+  from: user[A-Z0-9]{3}
+  generate: expression
+  name: MYSQL_USER
+  required: true
+- description: Password for the MariaDB connection user.
+  displayName: MariaDB Connection Password
+  from: '[a-zA-Z0-9]{16}'
+  generate: expression
+  name: MYSQL_PASSWORD
+  required: true
+- description: Name of the MariaDB database accessed.
+  displayName: MariaDB Database Name
+  name: MYSQL_DATABASE
+  required: true
+  value: sampledb
