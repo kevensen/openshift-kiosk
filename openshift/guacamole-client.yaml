@@ -1,5 +1,7 @@
 apiVersion: v1
 kind: Template
+labels:
+  template: Guacamole Client
 metadata:
   annotations:
     description: Guacamole XRDP and VNC over HTML5
