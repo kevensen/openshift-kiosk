@@ -195,6 +195,7 @@ parameters:
   displayName: Client Source git Repository
   name: GUACAMOLE_CLIENT_URL
   required: true
+  value: https://github.com/bagnaram/incubator-guacamole-client.git
 - description: Set this to a branch name, tag or other ref of your repository if you are not using the default branch
   displayName: gcc Source Branch
   name: GUACAMOLE_CLIENT_REF
